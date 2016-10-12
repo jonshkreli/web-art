@@ -10,6 +10,7 @@
     function setup() {
         createCanvas(800, 600,WEBGL);
         //camera(mouseX*13, height/2, (height/2) / tan(PI/6), width/2, height/2, 0, 0, 1, 0);
+        perspective(60 / 180 * PI, width/height, 0.4, 10000);
 
     }
 
@@ -22,37 +23,43 @@
         constructor(){
             this.spheres = [];
         }
-         addSphere(){
-            if(mouseIsPressed){
+        addSphere(){
+            if(mouseIsPressed && key!='o')
                 if(abs( mouseX-pmouseX)>3 && abs(mouseY-pmouseY)>3){
                     var coord={x: mouseX, y: mouseY};
                     let vector = {x: ( mouseX-pmouseX)/100, y: ( mouseY-pmouseY)/100};
                     let colArr = new Array(3);
                     for(let i=0;i<3;i++) colArr[i] = Math.floor(Math.random()*255);
-                    let color= 'rgba('+colArr[0]+','+colArr[1]+','+colArr[2]+',0.3)';
+                    let col={};
+                    col.rgbaStr = 'rgba('+colArr[0]+','+colArr[1]+','+colArr[2]+',0.9)';
+                    col.rgbArr = colArr;
+                    col.c = color(colArr[0],colArr[1],colArr[2],180);
                     var sphereData = {};
-                    sphereData.coord= coord; sphereData.vector = vector; sphereData.color = color;
+                    sphereData.coord= coord; sphereData.vector = vector; sphereData.col = col;
                     this.spheres.push(sphereData);
                 }
                 //console.log(mouseButton)
-            }
+
         }
         showspheres(){
             //console.log(this.spheres);
             var arrl = this.spheres;
             for(let ele=0; ele< arrl.length;ele++){
                 //console.log(arrl[ele]);
-                push();
-                translate(-width/2+arrl[ele].coord.x,-height/2+arrl[ele].coord.y,zt);
-                //arrl[ele].coord.y++;
-                //if(mouseIsPressed){
-                arrl[ele].coord.x+=arrl[ele].vector.x; arrl[ele].coord.y+=arrl[ele].vector.y;
 
+                push();
+                translate(-width/2+arrl[ele].coord.x,-height/2+arrl[ele].coord.y,0);
+                //arrl[ele].coord.y++;
+                arrl[ele].coord.x+=arrl[ele].vector.x; arrl[ele].coord.y+=arrl[ele].vector.y;
+                pointLight(50,50,50,130,-300,200);
+
+                //ambientLight(arrl[ele].col.c /*'red'*/);
+                specularMaterial(arrl[ele].col.c);
                 var size;
                 if(ele>90) size=20;
                 else if(ele >=50 && ele<=90) size=10;
                 else size=5;
-                fill(arrl[ele].color);
+
                 sphere(size);
                 pop();
             }
@@ -62,8 +69,8 @@
         }
         RevertInBounds(){
             for(let ele=0; ele< this.spheres.length;ele++){
-               let sph = this.spheres[ele];
-               if(sph.coord.x >= 800 || sph.coord.x<=0 ) sph.vector.x = -sph.vector.x;
+                let sph = this.spheres[ele];
+                if(sph.coord.x >= 800 || sph.coord.x<=0 ) sph.vector.x = -sph.vector.x;
                 if(sph.coord.y <=0 || sph.coord.y>= 600){
                     sph.vector.y = -sph.vector.y;
                 }
@@ -76,18 +83,19 @@
         }
         MouseTravel(){
             if(mouseIsPressed && key=='t')
-            if(mouseButton==CENTER)
-            for(let ele=0; ele< this.spheres.length;ele++){
-                let sph = this.spheres[ele];
-                let distancex = (mouseX - sph.coord.x)/100;
-                sph.coord.x-=distancex;
-                let distancey = (mouseY - sph.coord.y)/100;
-                sph.coord.y-=distancey;
-            }
+                if(mouseButton==LEFT)
+                    for(let ele=0; ele< this.spheres.length;ele++){
+
+                        let sph = this.spheres[ele];
+                        let distancex = (mouseX - sph.coord.x)/100;
+                        sph.coord.x-=distancex;
+                        let distancey = (mouseY - sph.coord.y)/100;
+                        sph.coord.y-=distancey;
+                    }
         }
         MouseWind(){
             if(mouseIsPressed && key=='w')
-                if(mouseButton==CENTER)
+                if(mouseButton==LEFT)
                     for(let ele=0; ele< this.spheres.length;ele++){
                         let sph = this.spheres[ele];
                         let distancex = (width -abs(mouseX - sph.coord.x))/10000;
@@ -100,17 +108,16 @@
         AirFriction(){
             for(let ele=0; ele< this.spheres.length;ele++){
                 let svec = this.spheres[ele].vector;
-               // if(svec.x>0) svec.x-=0.001; else svec.x+=0.001;
+                // if(svec.x>0) svec.x-=0.001; else svec.x+=0.001;
                 //if(svec.y>0) svec.y-=0.001; else svec.y+=0.001;
                 if(abs(svec.x) > 2)
-                svec.x*=0.99;
+                    svec.x*=0.99;
                 if(abs(svec.y) > 2)
-                svec.y*=0.99;
+                    svec.y*=0.99;
             }
         }
         MouseSuck(){
             if(mouseIsPressed && key=='s')
-                if(mouseButton==CENTER)
                     for(let ele=0; ele< this.spheres.length;ele++){
                         let sph = this.spheres[ele];
                         let distancex = (width -abs(mouseX - sph.coord.x))/10000;
@@ -124,76 +131,89 @@
         }
     }
 
-/*
+    /*
      //classic way
-    var sphereClass = function () {
-        this.spheres = [];
-        this.addSphere = function () {
-            if(mouseIsPressed){
-                if(abs( mouseX-pmouseX)>3 && abs(mouseY-pmouseY)>3){
-                    var coord={x: mouseX, y: mouseY};
-                    let vector = {x: ( mouseX-pmouseX)/100, y: ( mouseY-pmouseY)/100};
-                    let colArr = new Array(3);
-                    for(let i=0;i<3;i++) colArr[i] = Math.floor(Math.random()*255);
-                    let color= 'rgba('+colArr[0]+','+colArr[1]+','+colArr[2]+',0.3)';
-                    var sphereData = {};
-                    sphereData.coord= coord; sphereData.vector = vector; sphereData.color = color;
-                    this.spheres.push(sphereData);
-                }
-                //console.log(mouseButton)
-            }
-        }
-        this.showspheres = function () {
-            console.log(this.spheres)
-        }
-    }
-*/
+     var sphereClass = function () {
+     this.spheres = [];
+     this.addSphere = function () {
+     if(mouseIsPressed){
+     if(abs( mouseX-pmouseX)>3 && abs(mouseY-pmouseY)>3){
+     var coord={x: mouseX, y: mouseY};
+     let vector = {x: ( mouseX-pmouseX)/100, y: ( mouseY-pmouseY)/100};
+     let colArr = new Array(3);
+     for(let i=0;i<3;i++) colArr[i] = Math.floor(Math.random()*255);
+     let color= 'rgba('+colArr[0]+','+colArr[1]+','+colArr[2]+',0.3)';
+     var sphereData = {};
+     sphereData.coord= coord; sphereData.vector = vector; sphereData.color = color;
+     this.spheres.push(sphereData);
+     }
+     //console.log(mouseButton)
+     }
+     }
+     this.showspheres = function () {
+     console.log(this.spheres)
+     }
+     }
+     */
 
     var SphereObj = new sphereClass();
 
     function CheckArrSize(array) {
         if(array.length>100) array.shift();
     }
-/*
-    arrl.addSphere = function () {
-        if(mouseIsPressed){
-            if(abs( mouseX-pmouseX)>3 && abs(mouseY-pmouseY)>3){
-                var coord={x: mouseX, y: mouseY};
-                let vector = {x: ( mouseX-pmouseX)/100, y: ( mouseY-pmouseY)/100};
-                colArr = new Array(3);
-                for(let i=0;i<3;i++) colArr[i] = Math.floor(Math.random()*255);
-                let color= 'rgba('+colArr[0]+','+colArr[1]+','+colArr[2]+',0.3)';
-                var sphereData = {};
-                sphereData.coord= coord; sphereData.vector = vector; sphereData.color = color;
-                this.push(sphereData);
-            }
-            //console.log(mouseButton)
-        }
-    };
-*/
+    /*
+     arrl.addSphere = function () {
+     if(mouseIsPressed){
+     if(abs( mouseX-pmouseX)>3 && abs(mouseY-pmouseY)>3){
+     var coord={x: mouseX, y: mouseY};
+     let vector = {x: ( mouseX-pmouseX)/100, y: ( mouseY-pmouseY)/100};
+     colArr = new Array(3);
+     for(let i=0;i<3;i++) colArr[i] = Math.floor(Math.random()*255);
+     let color= 'rgba('+colArr[0]+','+colArr[1]+','+colArr[2]+',0.3)';
+     var sphereData = {};
+     sphereData.coord= coord; sphereData.vector = vector; sphereData.color = color;
+     this.push(sphereData);
+     }
+     //console.log(mouseButton)
+     }
+     };
+     */
 
     function draw() {
         background(255, 15, z);
-        //camera(10,50,20)
+        ambientLight(200,200,200,0.9);
+        if(mouseButton==LEFT  && key=='o'){
+            orbitControl();
+        }
+
+        push();
+        camera(cos(frameCount * 0.02) * 200, 0, sin(frameCount * 0.02) * 100);
+        //directionalLight(25,25,25,-130,-300,-200);
+        pointLight(225,225,225,130,300,200);
+        //
+        specularMaterial(100,130,20);
+        sphere(30);
+
+        translate(100,100,3);
+        normalMaterial();
+        box(80);
+
+        translate(-200,-200,-13); rotateZ(40); rotateY(20);
+        ambientMaterial(20,200,20);
+        cone(30,70);
+
+        pop();
 
         SphereObj.addSphere();
         SphereObj.showspheres();
         SphereObj.ApplyForces(['RevertInBounds','MouseTravel','MouseWind','AirFriction']);
+        CheckArrSize(SphereObj.spheres);
 
-        CheckArrSize(SphereObj.spheres)
+
+
     }
     function mousePressed() {
-        if(mouseButton==LEFT){
-            //fill(10,10,200);
-            console.log('l');
-            z-=10;
-        }
 
-        else {
-            //fill(200,10,10);
-            console.log('nl');
-            z+=10;
-        }
         print(mouseButton)
 
         // prevent default
