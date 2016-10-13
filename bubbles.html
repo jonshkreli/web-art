@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.4/p5.min.js"></script>
+    <link rel="stylesheet" href="domstyle.css">
 </head>
 <body>
 <script>
@@ -19,12 +20,37 @@
     var zt=0;
     var x=0,y=0,z=0;
 
+
     class sphereClass{
         constructor(){
             this.spheres = [];
+            this.activemode='';
         }
+        ActiveMode(){
+            let inputs = document.getElementById('mode').getElementsByTagName('input');
+            for(i in inputs) if(inputs[i].checked) this.activemode=inputs[i].value;
+        }
+        ActiveFeatures(){
+        let returnValues=[];
+        let inputs = document.getElementById('features').getElementsByTagName('input');
+        for(let i=0; i< inputs.length;++i)  if(inputs[i].checked) returnValues.push(inputs[i].id);
+        return returnValues;
+        }
+        runSpheres(){
+            this.ActiveMode();
+            this.drawSphere();
+            this.showspheres();
+
+            this.ApplyForces(this.ActiveFeatures());
+
+            CheckArrSize(this.spheres);
+        }
+        drawSphere(){
+            if(mouseIsPressed && (key=='d' || this.activemode=='Draw bubbles'))
+                    //console.log(true)
+                this.addSphere()
+                    }
         addSphere(){
-            if(mouseIsPressed && key!='o')
                 if(abs( mouseX-pmouseX)>3 && abs(mouseY-pmouseY)>3){
                     var coord={x: mouseX, y: mouseY};
                     let vector = {x: ( mouseX-pmouseX)/100, y: ( mouseY-pmouseY)/100};
@@ -82,8 +108,8 @@
             }
         }
         MouseTravel(){
-            if(mouseIsPressed && key=='t')
-                if(mouseButton==LEFT)
+            if(mouseIsPressed && (key=='t' || this.activemode=='travel'))
+                if(mouseButton==LEFT){ this.addSphere();
                     for(let ele=0; ele< this.spheres.length;ele++){
 
                         let sph = this.spheres[ele];
@@ -91,10 +117,10 @@
                         sph.coord.x-=distancex;
                         let distancey = (mouseY - sph.coord.y)/100;
                         sph.coord.y-=distancey;
-                    }
+                    }}
         }
         MouseWind(){
-            if(mouseIsPressed && key=='w')
+            if(mouseIsPressed && (key=='w'|| this.activemode=='wind'))
                 if(mouseButton==LEFT)
                     for(let ele=0; ele< this.spheres.length;ele++){
                         let sph = this.spheres[ele];
@@ -124,7 +150,7 @@
                         if(mouseX < sph.coord.x) sph.vector.x-=distancex; else sph.vector.x+=distancex;
 
                         let distancey = (height -abs(mouseY - sph.coord.y))/10000;
-                        if(mouseY < sph.coord.y) sph.vector.y-=distancex; else sph.vector.y+=distancex;
+                        if(mouseY < sph.coord.y) sph.vector.y-=distancey; else sph.vector.y+=distancey;
 
                         sph.vector.x*=0.99; sph.vector.y*=0.99;
                     }
@@ -179,10 +205,13 @@
      };
      */
 
+    function bgCol() {return document.getElementById('background').value; }
+    function setambientLight() { return document.getElementById('ambientLight').value;}
+
     function draw() {
-        background(255, 15, z);
-        ambientLight(200,200,200,0.9);
-        if(mouseButton==LEFT  && key=='o'){
+        background(bgCol());
+        ambientLight(setambientLight());
+        if(mouseButton==LEFT  && (key=='o' || SphereObj.activemode=='view control')){
             orbitControl();
         }
 
@@ -203,28 +232,40 @@
         cone(30,70);
 
         pop();
-
-        SphereObj.addSphere();
-        SphereObj.showspheres();
-        SphereObj.ApplyForces(['RevertInBounds','MouseTravel','MouseWind','AirFriction']);
-        CheckArrSize(SphereObj.spheres);
-
-
-
+        SphereObj.runSpheres()
     }
     function mousePressed() {
 
-        print(mouseButton)
+        print(mouseButton);
 
         // prevent default
         return false;
     }
 </script>
-</body>
-    
+
     <p>MouseHold: draw bubbles</p>
     <p>MouseHold left+w: wind</p>
     <p>MouseHold left+t: travel</p>
     <p>MouseHold left+o: view control</p>
+<div id="mode">
+    <h4>Modes</h4>
+    <label for="db">Draw bubbles</label><input id="db" type="radio" value="Draw bubbles" name="control" checked>
+    <label for="wind">wind</label><input id="wind" type="radio" value="wind" name="control">
+    <label for="travel">travel</label><input id="travel" type="radio" value="travel" name="control">
+    <label for="vc"></label>view control<input id="vc" type="radio" value="view control" name="control">
+</div>
+<div id="features">
+    <h4>Features</h4>
+    <label for="RevertInBounds">Revert In Bounds</label> <input type="checkbox" name="features" id="RevertInBounds" checked>
+    <label for="MouseTravel">Mouse Travel</label> <input type="checkbox" name="features" id="MouseTravel" checked>
+    <label for="MouseWind">Mouse Wind</label> <input type="checkbox" name="features" id="MouseWind" checked>
+    <label for="AirFriction">Air Friction</label> <input type="checkbox" name="features" id="AirFriction" checked>
+    <label for="Gravity">Gravity</label> <input type="checkbox" name="features" id="Gravity" checked>
+</div>
 
+<div id="other">
+    <label for="background">Background color</label><input type="color" id="background" value="#EE2222">
+    <label for="ambientLight">Ambient Light</label><input type="color" id="ambientLight" value="#FFFFFF">
+</div>
+</body>
 </html>
