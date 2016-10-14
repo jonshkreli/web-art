@@ -70,7 +70,7 @@
         showspheres(){
             //console.log(this.spheres);
             var arrl = this.spheres;
-            for(let ele=0; ele< arrl.length;ele++){
+            for(let ele in arrl){
                 //console.log(arrl[ele]);
 
                 push();
@@ -81,10 +81,7 @@
 
                 //ambientLight(arrl[ele].col.c /*'red'*/);
                 specularMaterial(arrl[ele].col.c);
-                var size;
-                if(ele>90) size=20;
-                else if(ele >=50 && ele<=90) size=10;
-                else size=5;
+                var size = lerp(0,20,ele/100)+1; //size varies from 1 to 21 (bigger when close to mouse)
 
                 sphere(size);
                 pop();
@@ -110,6 +107,7 @@
         MouseTravel(){
             if(mouseIsPressed && (key=='t' || this.activemode=='travel'))
                 if(mouseButton==LEFT){ this.addSphere();
+                    console.log(key)
                     for(let ele=0; ele< this.spheres.length;ele++){
 
                         let sph = this.spheres[ele];
@@ -154,6 +152,23 @@
 
                         sph.vector.x*=0.99; sph.vector.y*=0.99;
                     }
+        }
+        obstacle(){
+            for(var i=0;i<this.spheres.length;i++){
+                var sp1 = this.spheres[i];
+               for(var j=0;j<this.spheres.length;j++){
+                  if(i==j) continue;
+                    var sp2=this.spheres[j];
+                   //console.log(sp2,i,j)
+                    if(dist(sp1.coord.x,sp1.coord.y,sp2.coord.x,sp2.coord.y)<=(lerp(0,20,i/100)+lerp(0,20,j/100)+2)){
+                        //print(sp1.coord.x,sp1.coord.y,sp2.coord.x,sp2.coord.y)
+                        //console.log(sp1.vector.x)
+                        sp1.vector.x = -sp1.vector.x; sp1.vector.y = -sp1.vector.y;
+                        sp2.vector.x = -sp2.vector.x; sp1.vector.x = -sp1.vector.x;
+                        //console.log(sp1.vector.x)
+                    }
+                }
+            }
         }
     }
 
@@ -260,7 +275,9 @@
     <label for="MouseTravel">Mouse Travel</label> <input type="checkbox" name="features" id="MouseTravel" checked>
     <label for="MouseWind">Mouse Wind</label> <input type="checkbox" name="features" id="MouseWind" checked>
     <label for="AirFriction">Air Friction</label> <input type="checkbox" name="features" id="AirFriction" checked>
-    <label for="Gravity">Gravity</label> <input type="checkbox" name="features" id="Gravity" checked>
+    <label for="Gravity">Gravity</label> <input type="checkbox" name="features" id="Gravity" >
+    <label for="obstacle">obstacle</label> <input type="checkbox" name="features" id="obstacle">
+
 </div>
 
 <div id="other">
